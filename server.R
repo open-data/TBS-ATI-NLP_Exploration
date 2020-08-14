@@ -71,11 +71,11 @@ server <- function(input, output, session){
       count_trigrams(rv$stops)
   })
   
-  # tetragram = reactive({
-  #   rawDataSet %>% 
-  #     filter(owner %in% ownersTop9) %>%
-  #     count_tetragrams(rv$stops)
-  # })
+  tetragram = reactive({
+    rawDataSet %>%
+      filter(owner %in% ownersTop9) %>%
+      count_tetragrams(rv$stops)
+  })
   
   word_cors = reactive({
     req(input$dept, input$bigramN, filterData())
@@ -184,7 +184,7 @@ server <- function(input, output, session){
   output$plotTFIDF = renderPlot({
     req(input$nGramN, input$tfTopN)
     
-    if(input$nGramN == 1) dd = unigram() %>% bind_tf_idf(word, owner, n)
+    if(input$nGramN <= 1) dd = unigram() %>% bind_tf_idf(word, owner, n)
     
     if(input$nGramN == 2) {
       dd = bigram() %>% 
@@ -198,6 +198,13 @@ server <- function(input, output, session){
         unite(trigram, word1, word2, word3, sep = " ") %>%
         count(owner, trigram, wt = n) %>%
         bind_tf_idf(trigram, owner, n)
+    }
+    
+    if(input$nGramN > 3) {
+      dd = tetragram() %>% 
+        unite(tetragram, word1, word2, word3, word4, sep = " ") %>%
+        count(owner, tetragram, wt = n) %>%
+        bind_tf_idf(tetragram, owner, n)
     }
     
     dd %>%
