@@ -1,0 +1,172 @@
+word,theme
+year,year
+years,year
+2013,year
+2014,year
+2015,year
+2016,year
+2017,year
+2018,year
+2019,year
+2020,year
+day,day
+days,day
+0,day
+0,day
+1,day
+2,day
+3,day
+4,day
+5,day
+6,day
+7,day
+8,day
+9,day
+10,day
+11,day
+12,day
+13,day
+14,day
+15,day
+16,day
+17,day
+18,day
+19,day
+20,day
+21,day
+22,day
+23,day
+24,day
+25,day
+26,day
+27,day
+28,day
+29,day
+30,day
+31,day
+month,month
+months,month
+january,month
+february,month
+march,month
+april,month
+may,month
+june,month
+july,month
+august,month
+september,month
+october,month
+november,month
+december,month
+jan,month
+feb,month
+mar,month
+apr,month
+jun,month
+jul,month
+aug,month
+sep,month
+sept,month
+oct,month
+nov,month
+dec,month
+information,generic noun
+briefing,generic noun
+note,generic noun
+notes,generic noun
+report,generic noun
+reports,generic noun
+memo,generic noun
+memos,generic noun
+date,generic noun
+dates,generic noun
+dated,generic noun
+discussion,generic noun
+discussions,generic noun
+record,generic noun
+records,generic noun
+analysis,generic noun
+analyses,generic noun
+file,generic noun
+files,generic noun
+filed,generic verb
+communication,generic noun
+communications,generic noun
+correspondence,generic noun
+correspondences,generic noun
+department,generic noun
+departments,generic noun
+department’s,generic noun
+memo,generic noun
+memos,generic noun
+memorandum,generic noun
+memorandums,generic noun
+memoranda,generic noun
+material,generic noun
+materials,generic noun
+meeting,generic noun
+meetings,generic noun
+committee,generic noun
+committees,generic noun
+document,generic noun
+documents,generic noun
+email,generic noun
+emails,generic noun
+letter,generic noun
+letters,generic noun
+government,generic noun
+office,generic noun
+copy,generic noun
+copies,generic noun
+list,generic noun
+lists,generic noun
+data,generic noun
+title,generic noun
+titles,generic noun
+federal,generic canada
+canada,generic canada
+canada’s,generic canada
+canadas,generic canada
+canadian,generic canada
+canadians,generic canada
+cabinet,generic canada
+confidence,generic canada
+confidences,generic canada
+minister,generic canada
+ministers,generic canada
+minister’s,generic canada
+deputy,generic canada
+access,generic verb
+issue,generic verb
+issued,generic verb
+communicate,generic verb
+communicates,generic verb
+communicated,generic verb
+approval,generic verb
+approved,generic verb
+approve,generic verb
+exclude,generic verb
+excludes,generic verb
+excluding,generic verb
+include,generic verb
+includes,generic verb
+including,generic verb
+relate,generic verb
+relating,generic verb
+related,generic verb
+prepared,generic verb
+pertain,generic verb
+pertains,generic verb
+pertained,generic verb
+pertaining,generic verb
+request,generic verb
+requests,generic verb
+requested,generic verb
+provide,generic verb
+provides,generic verb
+providing,generic verb
+require,generic verb
+requires,generic verb
+required,generic verb
+requiring,generic verb
+nhq,common
