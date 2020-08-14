@@ -169,7 +169,7 @@ body = dashboardBody(
                          , tabPanel("TF-IDF",
                                     fluidPage(
                                       fluidRow(
-                                        column(1, numericInput("nGramN", "N-grams", 1, 1, 3, 1))
+                                        column(1, numericInput("nGramN", "N-grams", 1, 1, 4, 1))
                                         ,column(1, numericInput("tfTopN", "Top N", 10, 6, 20, 2))
                                       ) # END row
                                       

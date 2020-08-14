@@ -76,6 +76,20 @@ count_trigrams <- function(dataset, stopWords) {
     count(word1, word2, word3, sort = TRUE)
 }
 
+count_tetragrams <- function(dataset, stopWords) {
+  dataset %>%
+    mutate(ID = row_number()) %>% 
+    select(ID, owner, summary_en) %>%
+    unnest_tokens(tetragram, summary_en, token = "ngrams", n = 4) %>%
+    separate(tetragram, c("word1", "word2", "word3", "word4"), sep = " ") %>%
+    filter(!word1 %in% stopWords$word,
+           !word2 %in% stopWords$word,
+           !word3 %in% stopWords$word,
+           !word4 %in% stopWords$word) %>%
+    group_by(owner) %>% 
+    count(word1, word2, word3, word4, sort = TRUE)
+}
+
 visualize_bigrams <- function(bigrams) {
   set.seed(2016)
   a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
