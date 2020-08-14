@@ -8,7 +8,7 @@ library(DT) # For more attractive data tables in UI
 ## Optional shiny packages 
 library(shinycssloaders) # For waiting UI
 
-## NLP packages (could remove some, with loss of features)
+## NLP packages (could remove some, with loss of associated features)
 library(tidytext)
 library(igraph)
 library(ggraph)
@@ -16,6 +16,7 @@ library(widyr)
 library(tm)
 library(wordcloud)
 library(topicmodels)
+library(udpipe)
 
 if(file.exists("GGgraphs.R")) source("GGgraphs.R")
 if(file.exists("../GGgraphs.R")) source("../GGgraphs.R")
@@ -23,12 +24,9 @@ if(file.exists("../../GGgraphs.R")) source("../../GGgraphs.R")
   
 
 ### STUFF UNIQUE TO THIS DATASET ###
-
-idNamesNotPickedUp = c("") # Any ID vars that do not end in 'id' you want removed
-manualRemoveList = c("")   # Any other vars you want removed from predictor list (like leakage from the future)
-
 options(dplyr.summarise.inform=F) 
 
+## Functions
 clean_ati <- function(dfr) {
   dfr %>%
     mutate(owner = sub("\\|.*", "", owner_org_title)) %>%
@@ -107,6 +105,12 @@ visualize_tfidf <- function(tfidf, topN = 10) {
     coord_flip() +
     theme(axis.text = element_text(size = 12))
 }
+
+
+## Variables
+rawDataSet = read_csv("ati.csv") %>% clean_ati()
+ownersTop9 = rawDataSet %>% group_by(owner) %>% count() %>% ungroup() %>% top_n(9, n) %>% pull(owner)
+custWords = read_csv("stop_words_custom.csv") %>% pull(word)
 
 ### GENERAL ###
 

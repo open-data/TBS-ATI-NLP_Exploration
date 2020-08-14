@@ -47,14 +47,14 @@ sidebar = dashboardSidebar(
   # width = 450,
   
   sidebarMenu(id= "menu"
-              , selectInput("dataSource", "Choose data source:", choices = sub(".csv", "", list.files(pattern = "csv")))
+              # , selectInput("dataSource", "Choose data source:", choices = sub(".csv", "", list.files(pattern = "csv")))
 
               , fluidRow(
                 column(6, selectInput("filterDataSample", "Sample", c("Dept", "All"), "Dept"))
                 ,column(6, h3("N = ", textOutput("dataNtotal", inline= T)))
               )
               
-              , fluidRow(column(12, uiOutput("deptOut")))
+              , fluidRow(column(12, selectInput("dept", "Department", ownersTop9)))
               , fluidRow(column(8, numericInput("bigramN", "Top N for Bigrams", 20, 5, 50, 5)))
               
               , fluidRow(column(12, textInput("stopWordInput", "Input custom stop words (CSV):")))
