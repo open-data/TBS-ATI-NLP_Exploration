@@ -16,7 +16,7 @@ library(widyr)
 library(tm)
 library(wordcloud)
 library(topicmodels)
-library(udpipe)
+# library(udpipe)
 
 if(file.exists("GGgraphs.R")) source("GGgraphs.R")
 if(file.exists("../GGgraphs.R")) source("../GGgraphs.R")
