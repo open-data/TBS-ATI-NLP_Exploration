@@ -87,20 +87,20 @@ server <- function(input, output, session){
     
     ati_sub_topics = ati_top9 %>% filter(owner == input$dept)
     
-    ati_sub_topics %>%
-      count_unigrams(rv$stops) %>%
-      group_by(ID, owner) %>%
-      count(word) %>%
-      cast_dtm(ID, word, n)
+    # ati_sub_topics %>%
+    #   count_unigrams(rv$stops) %>%
+    #   group_by(ID, owner) %>%
+    #   count(word) %>%
+    #   cast_dtm(ID, word, n)
     
-    # CreateDtm(doc_vec = ati_sub_topics$summary_en, 
-    #           doc_names = ati_sub_topics$request_number, 
-    #           ngram_window = c(1, 2), 
-    #           stopword_vec = c(rv$stops, stopwords::stopwords(source = "smart")),
-    #           lower = TRUE,
-    #           remove_punctuation = TRUE,
-    #           remove_numbers = TRUE
-    # )
+    CreateDtm(doc_vec = ati_sub_topics$summary_en,
+              doc_names = ati_sub_topics$request_number,
+              ngram_window = c(1, 2),
+              stopword_vec = c(rv$stops, stopwords::stopwords(source = "smart")),
+              lower = TRUE,
+              remove_punctuation = TRUE,
+              remove_numbers = TRUE
+              ) 
   })
   
  
@@ -175,7 +175,8 @@ server <- function(input, output, session){
     
     dd %>%
       arrange(desc(tf_idf)) %>%
-      visualize_tfidf(input$tfTopN)  
+      visualize_tfidf(input$tfTopN) +
+      theme(text = element_text(size = 16))
     
   }, bg= "transparent")
   
@@ -183,26 +184,43 @@ server <- function(input, output, session){
   output$plotTopics = renderPlot({
     req(dtm())
     
-    # dtm() %>% 
-    #   FitLdaModel(k = 9, iterations = 20, burnin = 5) %>%
-    #   SummarizeTopics()
+    dtm() %>%
+      FitLdaModel(k = 9, iterations = 20, burnin = 5) %>%
+      SummarizeTopics() %>%
+      mutate(word = gsub("_", ",", top_terms_phi)) %>%
+      separate(word, into = letters, sep = ",", remove = T) %>%
+      select(-c(topic, top_terms_gamma, top_terms_phi, prevalence, coherence)) %>%
+      pivot_longer(cols = a:z, names_to = "junk", values_to = "word") %>%
+      select(-junk) %>%
+      filter(!is.na(word)) %>%
+      group_by(label_1, word) %>%
+      count() %>%
+      ggplot(aes(
+        label = word, size = n,
+        color = factor(sample.int(10, nrow(.), replace = TRUE))
+      )) +
+      geom_text_wordcloud_area() +
+      scale_size_area(max_size = 20) +
+      theme(text = element_text(size = 28)) +
+      # theme_minimal() +
+      facet_wrap(~label_1)
     
     # ("topic", "label_1", "prevalence", "coherence", "top_terms_phi", "top_terms_gamma")
     
-    dtm() %>%
-      LDA(k = input$topicN, control = list(seed = 1234)) %>%
-      tidy(matrix = "beta") %>% # DF: topic, term, beta
-      group_by(topic) %>%
-      top_n(input$topicTopN, beta) %>%
-      ungroup() %>%
-      arrange(topic, -beta) %>%
-      mutate(term = reorder_within(term, beta, topic)) %>%
-      ggplot(aes(term, beta, fill = factor(topic))) +
-      geom_col(show.legend = FALSE) +
-      facet_wrap(~ topic, scales = "free") +
-      coord_flip() +
-      scale_x_reordered() +
-      theme(axis.text = element_text(size = 12))
+    # dtm() %>%
+    #   LDA(k = input$topicN, control = list(seed = 1234)) %>%
+    #   tidy(matrix = "beta") %>% # DF: topic, term, beta
+    #   group_by(topic) %>%
+    #   top_n(input$topicTopN, beta) %>%
+    #   ungroup() %>%
+    #   arrange(topic, -beta) %>%
+    #   mutate(term = reorder_within(term, beta, topic)) %>%
+    #   ggplot(aes(term, beta, fill = factor(topic))) +
+    #   geom_col(show.legend = FALSE) +
+    #   facet_wrap(~ topic, scales = "free") +
+    #   coord_flip() +
+    #   scale_x_reordered() +
+    #   theme(axis.text = element_text(size = 12))
     
   }, bg= "transparent")
   

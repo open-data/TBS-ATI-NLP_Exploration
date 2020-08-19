@@ -19,6 +19,7 @@ library(tm)
 library(wordcloud)
 library(textmineR)
 library(topicmodels)
+library(ggwordcloud)
 # library(udpipe)
 
 if(file.exists("GGgraphs.R")) source("GGgraphs.R")

@@ -13,6 +13,7 @@ library(tm)
 library(wordcloud)
 library(topicmodels)
 library(textmineR)
+library(ggwordcloud)
 # library(udpipe) # Not used
 
 options(dplyr.summarise.inform=F) 
@@ -393,17 +394,41 @@ ati_dtm = CreateDtm(doc_vec = ati_sub_topics$summary_en, # character vector of d
 ```
 
 
-Fit LDA model
+Fit LDA model and summarize topics
 ```{r}
 # Dtm2Tcm(ati_dtm)
-ati_lda2 <- FitLdaModel(ati_dtm, k = 9, iterations = 20, burnin = 5)
+ati_topics2 <- ati_dtm %>% 
+  FitLdaModel(k = 9, iterations = 20, burnin = 5) %>%
+  SummarizeTopics()
 ```
 
 
-Summarize the topics
+Viz
 ```{r}
-SummarizeTopics(ati_lda2)
+words = ati_topics2$top_terms_phi[1] %>% gsub("_", ",", .) %>% strsplit(",") %>% unlist() %>% trimws()
+wordcloud(words, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
 ```
+Using ggplot
+```{r}
+ati_topics2 %>%
+  mutate(word = gsub("_", ",", top_terms_phi)) %>%
+  separate(word, into = letters, sep = ",", remove = T) %>%
+  select(-c(topic, top_terms_gamma, top_terms_phi, prevalence, coherence)) %>%
+  pivot_longer(cols = a:z, names_to = "junk", values_to = "word") %>%
+  select(-junk) %>%
+  filter(!is.na(word)) %>%
+  group_by(label_1, word) %>%
+  count() %>%
+  ggplot(aes(
+    label = word, size = n,
+    color = factor(sample.int(10, nrow(.), replace = TRUE))
+    )) +
+  geom_text_wordcloud_area() +
+  scale_size_area(max_size = 20) +
+  # theme_minimal() +
+  facet_wrap(~label_1)
+```
+
 
 ## Extract themes from topics using udpipe
 
