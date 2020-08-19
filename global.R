@@ -18,8 +18,8 @@ library(widyr)
 library(tm)
 library(wordcloud)
 library(textmineR)
-library(topicmodels)
 library(ggwordcloud)
+# library(topicmodels)
 # library(udpipe)
 
 if(file.exists("GGgraphs.R")) source("GGgraphs.R")
@@ -118,7 +118,7 @@ visualize_tfidf <- function(tfidf, topN = 10) {
     top_n(topN, tf_idf) %>% 
     ggplot(aes(x=word, y=tf_idf, fill = owner)) +
     geom_col(show.legend = FALSE) +
-    labs(x = NULL, y = "tf-idf") +
+    labs(x = NULL, y = "TF-IDF") +
     facet_wrap(~owner, scales = "free") +
     coord_flip() +
     theme(axis.text = element_text(size = 12))

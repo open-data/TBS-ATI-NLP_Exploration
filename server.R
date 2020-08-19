@@ -185,7 +185,7 @@ server <- function(input, output, session){
     req(dtm())
     
     dtm() %>%
-      FitLdaModel(k = 9, iterations = 20, burnin = 5) %>%
+      FitLdaModel(k = input$topicN, iterations = 20, burnin = 5) %>%
       SummarizeTopics() %>%
       mutate(word = gsub("_", ",", top_terms_phi)) %>%
       separate(word, into = letters, sep = ",", remove = T) %>%
@@ -315,7 +315,21 @@ server <- function(input, output, session){
       complete.cases() %>% mean() %>% make_gauge()
   })
   
-  # output$testText1 = renderPrint(str(word_cors())) # Testing - remove
+  ### Download ###
+  ### -------- ###
+  output$downPlotTFIDF = downloadHandler(
+    filename = function() {paste("Most-Important-Terms", input$dept, input$nGramN, "grams.png", sep = "-")},
+    
+    content = function(file) {      ggsave(file, width = 18, height = 8, units = "in")    }
+  )
+  
+  output$downPlotTopics = downloadHandler(
+    filename = function() {paste("Topic-Modeling", input$dept, input$topicN, "topics.png", sep = "-")},
+    
+    content = function(file) {      ggsave(file, width = 18, height = 8, units = "in")    }
+  )
+  
+  # output$testText1 = renderPrint(input$tabs) # Testing - remove
   # session$onSessionEnded(stopApp) # Uncomment to have R stop on browser close
   
 } # END server
