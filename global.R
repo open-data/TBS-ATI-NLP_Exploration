@@ -4,6 +4,8 @@ library(magrittr)
 library(rlang) # For sym() parsing text programmatically
 library(flexdashboard) # For gauges on shiny dashboard
 library(DT) # For more attractive data tables in UI
+library(shiny)
+library(shinydashboard)
 
 ## Optional shiny packages 
 library(shinycssloaders) # For waiting UI
@@ -15,6 +17,7 @@ library(ggraph)
 library(widyr)
 library(tm)
 library(wordcloud)
+library(textmineR)
 library(topicmodels)
 # library(udpipe)
 
@@ -122,8 +125,9 @@ visualize_tfidf <- function(tfidf, topN = 10) {
 
 
 ## Variables
-rawDataSet = read_csv("ati.csv") %>% clean_ati()
-ownersTop9 = rawDataSet %>% group_by(owner) %>% count() %>% ungroup() %>% top_n(9, n) %>% pull(owner)
+ati = read_csv("ati.csv") %>% clean_ati()
+ownersTop9 = ati %>% group_by(owner) %>% count() %>% ungroup() %>% top_n(9, n) %>% pull(owner)
+ati_top9 = ati %>% filter(owner %in% ownersTop9)
 custWords = read_csv("stop_words_custom.csv") %>% pull(word)
 
 ### GENERAL ###

@@ -12,7 +12,8 @@ library(widyr)
 library(tm)
 library(wordcloud)
 library(topicmodels)
-library(udpipe)
+library(textmineR)
+# library(udpipe) # Not used
 
 options(dplyr.summarise.inform=F) 
 ```
@@ -191,23 +192,34 @@ ati_tf %>%
 
 
 ## Bigrams
+```{r}
+count_bigrams <- function(dataset, stopWords) {
+  dataset %>%
+    mutate(ID = row_number()) %>% 
+    select(ID, owner, summary_en) %>%
+    unnest_tokens(bigram, summary_en, token = "ngrams", n = 2) %>%
+    separate(bigram, c("word1", "word2"), sep = " ") %>%
+    filter(!word1 %in% stopWords$word,
+           !word2 %in% stopWords$word)
+  # %>%
+  #   group_by(owner) %>% 
+  #   count(word1, word2, sort = TRUE)
+}
+```
+
 
 
 ```{r}
 ati_bigrams = ati %>% 
   filter(owner %in% ownersTop9) %>%
-  mutate(ID = row_number()) %>% 
-  select(ID, owner, summary_en) %>%
-  unnest_tokens(bigram, summary_en, token = "ngrams", n=2) %>%
-  separate(bigram, c("word1", "word2"), sep = " ") %>%
-  filter(!word1 %in% stopWordList$word) %>%
-  filter(!word2 %in% stopWordList$word) %>%
-  group_by(owner) %>% 
-  count(word1, word2, sort = T) 
+  count_bigrams(stop_words) %>%
+  group_by(owner) %>%
+  count(word1, word2, sort = TRUE)
 
 ati_bi_united = ati_bigrams %>% unite(bigram, word1, word2, sep = " ")
 ati_bi_united
 ```
+
 
 ### TF-IDF scores
 ```{r}
@@ -309,21 +321,35 @@ ati_wc = ati_words %>%
 wordcloud(ati_wc$word, ati_wc$n, max.words = 100, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
 ```
 
-## Topic Modelling
+# Topic Modelling
+
+Justice only
+```{r}
+ati_sub_topics = ati %>% filter(owner == thisOwner)
+```
+
+
+## Using {topicmodels}
 
 ### DTM creation - Justice only
 ```{r}
-ati_dtm = ati %>% 
-  filter(owner == thisOwner) %>%
+ati_dtm_uni = ati_sub_topics %>%
   count_unigrams(stopWordList) %>%
   group_by(ID, owner) %>% 
   count(word) %>%
   cast_dtm(ID, word, n)
+
+ati_dtm_bi = ati_sub_topics %>% 
+  count_bigrams(stopWordList) %>%
+  unite(bigram, word1, word2, sep = " ") %>%
+  group_by(ID, owner) %>% 
+  count(bigram) %>% 
+  cast_dtm(ID, bigram, n)
 ```
 
 
 ```{r}
-ati_lda <- LDA(ati_dtm, k = 9, control = list(seed = 1234))
+ati_lda <- LDA(ati_dtm_uni, k = 9, control = list(seed = 1234))
 ```
 
 Explore LDA model
@@ -349,50 +375,80 @@ ati_top_terms %>%
   scale_x_reordered()
 ```
 
-### Extract themes from topics
+## Extract themes from topics using textmineR
+
+### Unigrams and Bigrams
+
+Create the DTM
+```{r}
+ati_dtm = CreateDtm(doc_vec = ati_sub_topics$summary_en, # character vector of documents
+                    doc_names = ati_sub_topics$request_number, # document names, optional
+                    ngram_window = c(1, 2), # minimum and maximum n-gram length
+                    stopword_vec = c(stopWordList$word, 
+                                     stopwords::stopwords(source = "smart")), # this is the default value
+                    lower = TRUE, # lowercase - this is the default value
+                    remove_punctuation = TRUE, # punctuation - this is the default
+                    remove_numbers = TRUE # numbers - this is the default
+                    )
+```
+
+
+Fit LDA model
+```{r}
+# Dtm2Tcm(ati_dtm)
+ati_lda2 <- FitLdaModel(ati_dtm, k = 9, iterations = 20, burnin = 5)
+```
+
+
+Summarize the topics
+```{r}
+SummarizeTopics(ati_lda2)
+```
+
+## Extract themes from topics using udpipe
 
 Set a beta cutoff and find terms above it
 ```{r}
-minBeta = 0.01
-top_terms_grouped = ati_topics %>% 
-  filter(beta > minBeta) %>%
-  group_by(topic) %>%
-  arrange(topic)
+# minBeta = 0.01
+# top_terms_grouped = ati_topics %>% 
+#   filter(beta > minBeta) %>%
+#   group_by(topic) %>%
+#   arrange(topic)
 ```
 
 
 Keep only summaries that contain those terms
 ```{r}
-IDs2keep = ati %>% 
-  filter(owner %in% ownersTop9) %>%
-  count_unigrams(stopWordList) %>%
-  filter(word %in% top_terms_grouped$term) %>%
-  pull(ID) %>%
-  unique()
+# IDs2keep = ati %>% 
+#   filter(owner %in% ownersTop9) %>%
+#   count_unigrams(stopWordList) %>%
+#   filter(word %in% top_terms_grouped$term) %>%
+#   pull(ID) %>%
+#   unique()
 # %>% nest()
 ```
 
 
 Create nested df with a model for each topic
 ```{r}
-en <- udpipe::udpipe_download_model("english")
-model <- udpipe_load_model(en)
-
-udp_model <- function(dfr) {
-  udpipe::udpipe_annotate(model, as.character(dfr$term)) %>%
-    as.data.frame()
-}
-doc_dfs <- top_terms_grouped$data %>%
-  map(udp_model)
+# en <- udpipe::udpipe_download_model("english")
+# model <- udpipe_load_model(en)
+# 
+# udp_model <- function(dfr) {
+#   udpipe::udpipe_annotate(model, as.character(dfr$term)) %>%
+#     as.data.frame()
+# }
+# doc_dfs <- top_terms_grouped$data %>%
+#   map(udp_model)
 
 ```
 
 
 Testing
 ```{r}
-dd = udpipe::udpipe_annotate(model, ati$summary_en[1:100]) %>% as.data.frame()
-topics = keywords_rake(x = dd, term = "lemma", group = "doc_id", relevant = dd$upos %in% c("NOUN", "ADJ"))
-topics
+# dd = udpipe::udpipe_annotate(model, ati$summary_en[1:100]) %>% as.data.frame()
+# topics = keywords_rake(x = dd, term = "lemma", group = "doc_id", relevant = dd$upos %in% c("NOUN", "ADJ"))
+# topics
 
 # doc_df = doc_dfs[[1]]
 
