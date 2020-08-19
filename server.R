@@ -12,7 +12,7 @@ server <- function(input, output, session){
   rv$stops = data.frame(word = custWords, lexicon = "CUSTOM") %>% bind_rows(stop_words)
   
   # Figure out which variables are dates, factors, numeric, and binary
-  varClasses = reactive({    sapply(sapply(rawDataSet, class), "[[", 1)    })
+  varClasses = reactive({    sapply(sapply(ati_top9, class), "[[", 1)    })
   
   dateList   = reactive({    names(varClasses())[varClasses() %in% c("Date", "POSIXct")]    })
   factorList = reactive({    names(varClasses())[varClasses() %in% c("factor", "character")]    })
@@ -23,7 +23,7 @@ server <- function(input, output, session){
   filterData = reactive({
     req(input$filterDataSample)
     
-    rawDataSet %>%
+    ati_top9 %>%
       {if(input$filterDataSample != "All") filter(., owner == input$dept) else .}
   })
   
@@ -39,12 +39,18 @@ server <- function(input, output, session){
   
   
   ## Update custom stop word list
-  stopWordList = observeEvent(input$goStop, {
+  observeEvent(c(input$goStop, input$removeDeptName), {
     uiWords = strsplit(input$stopWordInput, ",") %>% 
       unlist() %>% 
       trimws()
     
     addWords = c(custWords, uiWords)
+    
+    # Remove department name as well, if selected
+    if(input$removeDeptName){
+      deptWords = strsplit(input$dept, " ") %>% unlist() %>% tolower()
+      addWords = c(addWords, deptWords)
+    } 
     
     rv$stops = data.frame(word = addWords, lexicon = "CUSTOM") %>%
       bind_rows(stop_words)
@@ -52,52 +58,49 @@ server <- function(input, output, session){
   
   ## Make N-grams
   unigram = reactive({
-    rawDataSet %>% 
-      filter(owner %in% ownersTop9) %>%
+    ati_top9 %>%
       count_unigrams(rv$stops) %>%
       group_by(owner) %>% 
       count(word)
   })
   
-  bigram = reactive({
-    rawDataSet %>% 
-      filter(owner %in% ownersTop9) %>%
-      count_bigrams(rv$stops)
-  })
+  bigram  = reactive({    ati_top9 %>% count_bigrams(rv$stops)  })
   
-  trigram = reactive({
-    rawDataSet %>% 
-      filter(owner %in% ownersTop9) %>%
-      count_trigrams(rv$stops)
-  })
+  trigram = reactive({    ati_top9 %>% count_trigrams(rv$stops)  })
   
-  tetragram = reactive({
-    rawDataSet %>%
-      filter(owner %in% ownersTop9) %>%
-      count_tetragrams(rv$stops)
-  })
+  tetragram = reactive({    ati_top9 %>% count_tetragrams(rv$stops)  })
   
   word_cors = reactive({
     req(input$dept, input$bigramN, filterData())
     
-    thisDept = filterData() %>% filter(owner == input$dept)
     topWords = unigram() %>% filter(owner == input$dept) %>% filter(n >= input$bigramN) %>% pull(word)
     
-    thisDept %>%
+    ati_top9 %>% 
+      filter(owner == input$dept) %>%
       count_unigrams(rv$stops) %>%
       filter(word %in% topWords) %>%
       pairwise_cor(word, ID, sort = TRUE)
   })
   
   dtm = reactive({
-    req(input$dept, filterData())
+    req(input$dept)
     
-    filterData() %>% 
-      filter(owner == input$dept) %>%
-      count_unigrams(rv$stops) %>%
-      group_by(ID, owner) %>% 
-      count(word) %>%
-      cast_dtm(ID, word, n)
+    ati_sub_topics = ati_top9 %>% filter(owner == input$dept)
+    
+    # ati_sub_topics %>%
+    #   count_unigrams(rv$stops) %>%
+    #   group_by(ID, owner) %>%
+    #   count(word) %>%
+    #   cast_dtm(ID, word, n)
+    
+    CreateDtm(doc_vec = ati_sub_topics$summary_en,
+              doc_names = ati_sub_topics$request_number,
+              ngram_window = c(1, 2),
+              stopword_vec = c(rv$stops, stopwords::stopwords(source = "smart")),
+              lower = TRUE,
+              remove_punctuation = TRUE,
+              remove_numbers = TRUE
+              ) 
   })
   
  
@@ -108,23 +111,23 @@ server <- function(input, output, session){
   
   ## Sidebar
   ## Uni tab
-  output$selectFac <- renderUI(  selectInput("facVar", "Factor Variable:",   choices = intersect(factorList(), names(rawDataSet)))  )
-  output$selectNum <- renderUI(  selectInput("numVar", "Numeric Variable:",  choices = intersect(c(numberList(), dateList()), names(rawDataSet)))  )
-  output$selectDat <- renderUI(  selectInput("datVar", "DateTime Variable:", choices = intersect(dateList(), names(rawDataSet)))  )
-  output$selectBin <- renderUI(  selectInput("binVar", "Binary Variable:",   choices = intersect(binaryList(), names(rawDataSet)))  )
+  output$selectFac <- renderUI(  selectInput("facVar", "Factor Variable:",   choices = intersect(factorList(), names(ati_top9)))  )
+  output$selectNum <- renderUI(  selectInput("numVar", "Numeric Variable:",  choices = intersect(c(numberList(), dateList()), names(ati_top9)))  )
+  output$selectDat <- renderUI(  selectInput("datVar", "DateTime Variable:", choices = intersect(dateList(), names(ati_top9)))  )
+  output$selectBin <- renderUI(  selectInput("binVar", "Binary Variable:",   choices = intersect(binaryList(), names(ati_top9)))  )
   
   ## Bi tab
-  output$selectMultivarX <- renderUI(    selectInput("multivarX", "X Variable:",  choices = names(rawDataSet))   )
-  output$selectMultivarY <- renderUI(    selectInput("multivarY", "Y Variable:",  choices = intersect(c(factorList(), numberList()), names(rawDataSet)))  )
-  output$selectMultivarG <- renderUI(    selectInput("multivarG", "Grouping Variable (Boxplot & Scatter):",   choices = c("NONE", intersect(c(factorList(), binaryList()), names(rawDataSet))))  )
+  output$selectMultivarX <- renderUI(    selectInput("multivarX", "X Variable:",  choices = names(ati_top9))   )
+  output$selectMultivarY <- renderUI(    selectInput("multivarY", "Y Variable:",  choices = intersect(c(factorList(), numberList()), names(ati_top9)))  )
+  output$selectMultivarG <- renderUI(    selectInput("multivarG", "Grouping Variable (Boxplot & Scatter):",   choices = c("NONE", intersect(c(factorList(), binaryList()), names(ati_top9))))  )
   
   observeEvent(input$switchVarsBi, {
     tempX = input$multivarX
     tempY = input$multivarY
     
-    output$selectMultivarX <- renderUI(    selectInput("multivarX", "X Variable:",  choices = names(rawDataSet), selected = tempY)   )
+    output$selectMultivarX <- renderUI(    selectInput("multivarX", "X Variable:",  choices = names(ati_top9), selected = tempY)   )
     output$selectMultivarY <- renderUI({
-      selectInput("multivarY", "Y Variable:",  choices = intersect(c(factorList(), numberList()), names(rawDataSet)), selected = tempX)
+      selectInput("multivarY", "Y Variable:",  choices = intersect(c(factorList(), numberList()), names(ati_top9)), selected = tempX)
     })
   })
   
@@ -142,43 +145,6 @@ server <- function(input, output, session){
   
   ### Plots ###
   ### ----- ###
-  
-  ## Uni tab
-  output$plotBar  = renderPlot({
-    req(input$facVar %in% names(rawDataSet))
-    
-    filterData() %>% select(input$facVar) %>%
-      gg_count(type= "Bar", x.lab = input$facVar, maxLevels = input$maxBarsUni, maxLabelL = input$maxLabelUni, 
-               iLog = input$iLogBarUni, iLabel = input$iLabelBarUni, iPareto = input$iParetoUni, iRotateX = input$iRotateXUni)
-  }, bg= "transparent")
-  
-  output$plotHist = renderPlot({
-    req(input$numVar %in% names(rawDataSet))
-    
-    filterData() %>% select(input$numVar) %>%
-      gg_hist(x.lab = input$numVar, myBins = input$numBinsHistUni, iLog = input$iLogHistUni)
-  }, bg= "transparent")
-
-  output$plotWC = renderPlot({
-    req(input$dept, unigram())
-    
-    ati_wc = unigram() %>%
-      filter(owner == input$dept) %>%
-      filter(n >= input$bigramN)
-    
-    wordcloud(ati_wc$word, ati_wc$n, max.words = 100, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
-  }, bg= "transparent")
-
-  
-  ## Bi tab
-  output$plotMulti = renderPlot({
-    req(input$multivarX %in% names(filterData()), input$multivarY %in% names(filterData())) # , input$tabs == "Bivariate"
-    
-    filterData() %>%
-      {if(input$multivarG == "NONE") select(., input$multivarX, input$multivarY) else select(., input$multivarX, input$multivarY, input$multivarG)} %>%
-      make_multi_plot(input$catXcatType, input$maxLevelsMulti, input$maxGroupsMulti, input$maxLabelMulti, input$cutoffMulti, input$iKeepFac, input$iLogMulti, 
-                      input$iRotateXMulti, input$iFreqPoly, input$numBinsMulti, input$iLinearMulti, input$iXYMulti, input$iJitterMulti)
-  }, bg= "transparent")
   
   ## TF-IDF tab
   output$plotTFIDF = renderPlot({
@@ -209,8 +175,90 @@ server <- function(input, output, session){
     
     dd %>%
       arrange(desc(tf_idf)) %>%
-      visualize_tfidf(input$tfTopN)  
+      visualize_tfidf(input$tfTopN) +
+      theme(text = element_text(size = 16))
     
+  }, bg= "transparent")
+  
+  ## Topic Modeling tab
+  output$plotTopics = renderPlot({
+    req(dtm())
+    
+    dtm() %>%
+      FitLdaModel(k = input$topicN, iterations = 20, burnin = 5) %>%
+      SummarizeTopics() %>%
+      mutate(word = gsub("_", ",", top_terms_phi)) %>%
+      separate(word, into = letters, sep = ",", remove = T) %>%
+      select(-c(topic, top_terms_gamma, top_terms_phi, prevalence, coherence)) %>%
+      pivot_longer(cols = a:z, names_to = "junk", values_to = "word") %>%
+      select(-junk) %>%
+      filter(!is.na(word)) %>%
+      group_by(label_1, word) %>%
+      count() %>%
+      ggplot(aes(
+        label = word, size = n,
+        color = factor(sample.int(10, nrow(.), replace = TRUE))
+      )) +
+      geom_text_wordcloud_area() +
+      scale_size_area(max_size = 20) +
+      theme(text = element_text(size = 28)) +
+      # theme_minimal() +
+      facet_wrap(~label_1)
+    
+    # ("topic", "label_1", "prevalence", "coherence", "top_terms_phi", "top_terms_gamma")
+    
+    # dtm() %>%
+    #   LDA(k = input$topicN, control = list(seed = 1234)) %>%
+    #   tidy(matrix = "beta") %>% # DF: topic, term, beta
+    #   group_by(topic) %>%
+    #   top_n(input$topicTopN, beta) %>%
+    #   ungroup() %>%
+    #   arrange(topic, -beta) %>%
+    #   mutate(term = reorder_within(term, beta, topic)) %>%
+    #   ggplot(aes(term, beta, fill = factor(topic))) +
+    #   geom_col(show.legend = FALSE) +
+    #   facet_wrap(~ topic, scales = "free") +
+    #   coord_flip() +
+    #   scale_x_reordered() +
+    #   theme(axis.text = element_text(size = 12))
+    
+  }, bg= "transparent")
+  
+  ## Uni tab
+  output$plotBar  = renderPlot({
+    req(input$facVar %in% names(ati_top9))
+    
+    filterData() %>% select(input$facVar) %>%
+      gg_count(type= "Bar", x.lab = input$facVar, maxLevels = input$maxBarsUni, maxLabelL = input$maxLabelUni, 
+               iLog = input$iLogBarUni, iLabel = input$iLabelBarUni, iPareto = input$iParetoUni, iRotateX = input$iRotateXUni)
+  }, bg= "transparent")
+  
+  output$plotHist = renderPlot({
+    req(input$numVar %in% names(ati_top9))
+    
+    filterData() %>% select(input$numVar) %>%
+      gg_hist(x.lab = input$numVar, myBins = input$numBinsHistUni, iLog = input$iLogHistUni)
+  }, bg= "transparent")
+  
+  output$plotWC = renderPlot({
+    req(input$dept, unigram())
+    
+    ati_wc = unigram() %>%
+      filter(owner == input$dept) %>%
+      filter(n >= input$bigramN)
+    
+    wordcloud(ati_wc$word, ati_wc$n, max.words = 100, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
+  }, bg= "transparent")
+  
+  
+  ## Bi tab
+  output$plotMulti = renderPlot({
+    req(input$multivarX %in% names(filterData()), input$multivarY %in% names(filterData())) # , input$tabs == "Bivariate"
+    
+    filterData() %>%
+      {if(input$multivarG == "NONE") select(., input$multivarX, input$multivarY) else select(., input$multivarX, input$multivarY, input$multivarG)} %>%
+      make_multi_plot(input$catXcatType, input$maxLevelsMulti, input$maxGroupsMulti, input$maxLabelMulti, input$cutoffMulti, input$iKeepFac, input$iLogMulti, 
+                      input$iRotateXMulti, input$iFreqPoly, input$numBinsMulti, input$iLinearMulti, input$iXYMulti, input$iJitterMulti)
   }, bg= "transparent")
   
   ## Bigram tabs
@@ -222,7 +270,7 @@ server <- function(input, output, session){
       select(-owner) %>%
       filter(n > input$bigramN) %>%
       visualize_bigrams()
-
+    
   }, bg= "transparent")
   
   output$plotBigramCorr = renderPlot({
@@ -235,27 +283,6 @@ server <- function(input, output, session){
       geom_node_point(color = "lightblue", size = 5) +
       geom_node_text(aes(label = name), repel = TRUE) +
       theme_void()
-    
-  }, bg= "transparent")
-  
-  ## Topic Modeling tab
-  output$plotTopics = renderPlot({
-    req(dtm())
-    
-    dtm() %>% 
-      LDA(k = input$topicN, control = list(seed = 1234)) %>%
-      tidy(matrix = "beta") %>%
-      group_by(topic) %>%
-      top_n(input$topicTopN, beta) %>%
-      ungroup() %>%
-      arrange(topic, -beta) %>%
-      mutate(term = reorder_within(term, beta, topic)) %>%
-      ggplot(aes(term, beta, fill = factor(topic))) +
-      geom_col(show.legend = FALSE) +
-      facet_wrap(~ topic, scales = "free") +
-      coord_flip() +
-      scale_x_reordered() +
-      theme(axis.text = element_text(size = 12))
     
   }, bg= "transparent")
   
@@ -276,8 +303,8 @@ server <- function(input, output, session){
   ### ------ ###
   
   ## Univariate tab
-  output$gaugeFac = renderGauge({   req(input$facVar %in% names(rawDataSet)); render_gauge(input$facVar, filterData())   })
-  output$gaugeNum = renderGauge({   req(input$numVar %in% names(rawDataSet)); render_gauge(input$numVar, filterData())   })
+  output$gaugeFac = renderGauge({   req(input$facVar %in% names(ati_top9)); render_gauge(input$facVar, filterData())   })
+  output$gaugeNum = renderGauge({   req(input$numVar %in% names(ati_top9)); render_gauge(input$numVar, filterData())   })
   
   ## Bivariate tab
   output$gaugeBiComp = renderGauge({
@@ -288,7 +315,21 @@ server <- function(input, output, session){
       complete.cases() %>% mean() %>% make_gauge()
   })
   
-  # output$testText1 = renderPrint(str(word_cors())) # Testing - remove
+  ### Download ###
+  ### -------- ###
+  output$downPlotTFIDF = downloadHandler(
+    filename = function() {paste("Most-Important-Terms", input$dept, input$nGramN, "grams.png", sep = "-")},
+    
+    content = function(file) {      ggsave(file, width = 18, height = 8, units = "in")    }
+  )
+  
+  output$downPlotTopics = downloadHandler(
+    filename = function() {paste("Topic-Modeling", input$dept, input$topicN, "topics.png", sep = "-")},
+    
+    content = function(file) {      ggsave(file, width = 18, height = 8, units = "in")    }
+  )
+  
+  # output$testText1 = renderPrint(input$tabs) # Testing - remove
   # session$onSessionEnded(stopApp) # Uncomment to have R stop on browser close
   
 } # END server

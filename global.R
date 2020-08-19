@@ -4,6 +4,8 @@ library(magrittr)
 library(rlang) # For sym() parsing text programmatically
 library(flexdashboard) # For gauges on shiny dashboard
 library(DT) # For more attractive data tables in UI
+library(shiny)
+library(shinydashboard)
 
 ## Optional shiny packages 
 library(shinycssloaders) # For waiting UI
@@ -15,7 +17,9 @@ library(ggraph)
 library(widyr)
 library(tm)
 library(wordcloud)
-library(topicmodels)
+library(textmineR)
+library(ggwordcloud)
+# library(topicmodels)
 # library(udpipe)
 
 if(file.exists("GGgraphs.R")) source("GGgraphs.R")
@@ -114,7 +118,7 @@ visualize_tfidf <- function(tfidf, topN = 10) {
     top_n(topN, tf_idf) %>% 
     ggplot(aes(x=word, y=tf_idf, fill = owner)) +
     geom_col(show.legend = FALSE) +
-    labs(x = NULL, y = "tf-idf") +
+    labs(x = NULL, y = "TF-IDF") +
     facet_wrap(~owner, scales = "free") +
     coord_flip() +
     theme(axis.text = element_text(size = 12))
@@ -122,8 +126,9 @@ visualize_tfidf <- function(tfidf, topN = 10) {
 
 
 ## Variables
-rawDataSet = read_csv("ati.csv") %>% clean_ati()
-ownersTop9 = rawDataSet %>% group_by(owner) %>% count() %>% ungroup() %>% top_n(9, n) %>% pull(owner)
+ati = read_csv("ati.csv") %>% clean_ati()
+ownersTop9 = ati %>% group_by(owner) %>% count() %>% ungroup() %>% top_n(9, n) %>% pull(owner)
+ati_top9 = ati %>% filter(owner %in% ownersTop9)
 custWords = read_csv("stop_words_custom.csv") %>% pull(word)
 
 ### GENERAL ###
