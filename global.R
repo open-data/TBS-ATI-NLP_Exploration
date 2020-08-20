@@ -7,9 +7,6 @@ library(DT) # For more attractive data tables in UI
 library(shiny)
 library(shinydashboard)
 
-## Optional shiny packages 
-library(shinycssloaders) # For waiting UI
-
 ## NLP packages (could remove some, with loss of associated features)
 library(tidytext)
 library(igraph)
@@ -19,13 +16,8 @@ library(tm)
 library(wordcloud)
 library(textmineR)
 library(ggwordcloud)
-# library(topicmodels)
-# library(udpipe)
 
-if(file.exists("GGgraphs.R")) source("GGgraphs.R")
-if(file.exists("../GGgraphs.R")) source("../GGgraphs.R")
-if(file.exists("../../GGgraphs.R")) source("../../GGgraphs.R")
-  
+source("GGgraphs.R")
 
 ### STUFF UNIQUE TO THIS DATASET ###
 options(dplyr.summarise.inform=F) 

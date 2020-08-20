@@ -65,15 +65,16 @@ server <- function(input, output, session){
   })
   
   bigram  = reactive({    ati_top9 %>% count_bigrams(rv$stops)  })
-  
   trigram = reactive({    ati_top9 %>% count_trigrams(rv$stops)  })
-  
   tetragram = reactive({    ati_top9 %>% count_tetragrams(rv$stops)  })
   
   word_cors = reactive({
-    req(input$dept, input$bigramN, filterData())
+    req(input$dept, input$bigramN)
     
-    topWords = unigram() %>% filter(owner == input$dept) %>% filter(n >= input$bigramN) %>% pull(word)
+    topWords = unigram() %>% 
+      {if(input$filterDataSample != "All") filter(., owner == input$dept) else .} %>%
+      filter(n >= input$bigramN) %>% 
+      pull(word)
     
     ati_top9 %>% 
       filter(owner == input$dept) %>%
@@ -139,8 +140,17 @@ server <- function(input, output, session){
   ### Tables ###
   ### ------ ###
   
-  output$tableBigramN = DT::renderDataTable(    DT::datatable(filter(bigram(), owner == input$dept), options = list(pageLength = 20))   )
-  output$tableBigramCorr = DT::renderDataTable(    DT::datatable(filter(word_cors(), correlation > input$bigramCorrMin), options = list(pageLength = 18))   )
+  output$tableBigramN = DT::renderDataTable({
+    bigram() %>%
+      {if(input$filterDataSample != "All") filter(., owner == input$dept) else .} %>%
+      DT::datatable(options = list(pageLength = 20))
+  })    
+  
+  output$tableBigramCorr = DT::renderDataTable({
+    word_cors() %>%
+      filter(correlation > input$bigramCorrMin) %>%
+      DT::datatable(options = list(pageLength = 18))
+  })
   
   
   ### Plots ###
@@ -244,7 +254,7 @@ server <- function(input, output, session){
     req(input$dept, unigram())
     
     ati_wc = unigram() %>%
-      filter(owner == input$dept) %>%
+      {if(input$filterDataSample != "All") filter(., owner == input$dept) else .} %>%
       filter(n >= input$bigramN)
     
     wordcloud(ati_wc$word, ati_wc$n, max.words = 100, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
@@ -265,7 +275,7 @@ server <- function(input, output, session){
   output$plotBigramN = renderPlot({
     
     bigram() %>%
-      filter(owner == input$dept) %>%
+      {if(input$filterDataSample != "All") filter(., owner == input$dept) else .} %>%
       ungroup() %>%
       select(-owner) %>%
       filter(n > input$bigramN) %>%

@@ -1,8 +1,7 @@
 # margin unit is (top, right, bottom, left)
 library(tidyverse)
 library(scales) # For pretty breaks, mainly
-library(ggthemes) # For better palettes
-library(gghighlight) # Highlighting of graphs
+library(ggthemes)
 library(rlang) # For sym() parsing text programmatically
  
 # Resolution - lower this to make smaller size files
