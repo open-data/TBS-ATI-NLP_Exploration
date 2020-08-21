@@ -71,7 +71,7 @@ body = dashboardBody(
       HTML(".shiny-notification {position: fixed; top: calc(80%); left: calc(50%); font-size: 32px;}")
     )), 
   tabsetPanel(
-    tabPanel("Overhead"
+    tabPanel("Overview"
              , tabsetPanel(
                tabPanel("Most Important Terms",
                         fluidPage(
@@ -103,7 +103,7 @@ body = dashboardBody(
                           
                ) # END Tab Topic
              ) # END tabsetPanel
-             ) # END tabPanel Overhead
+             ) # END tabPanel Overview
              
              
              , tabPanel("Deep Dive"
@@ -222,7 +222,7 @@ body = dashboardBody(
                           ) # END Tab Bigrams
                         ) # END tabsetPanel 
              ) # END tabPanel Deep Dive
-    , selected = "Overhead"
+    , selected = "Overview"
   ) # END tabsetPanel 
 ) # END Body
 

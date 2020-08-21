@@ -7,7 +7,7 @@
 install.packages(c("shiny","shinydashboard","tidyverse","magrittr",
                    "rlang","flexdashboard","DT","shinycssloaders",
                    "tidytext","igraph","ggraph","widyr","tm","wordcloud",
-                   "topicmodels","scales","ggthemes","gghighlight"))
+                   "topicmodels","scales","ggthemes","gghighlight","textmineR","ggwordcloud"))
                    
 library(shiny)
 runGitHub("open-data/TBS-ATI-NLP_Exploration/")
@@ -16,7 +16,7 @@ runGitHub("open-data/TBS-ATI-NLP_Exploration/")
 
 ## Sidebar
 
-The sample dropdown applies to the Deep Dive tab only. If set to 'Dept', the statistics on those subtabs (and the count in the sidebar) will only reflect the department chosen below. If set to 'All' then it will reflect all of the top 9 Departments. This dropdown does not affect the Overhead tab, which always splits by department regardless of the setting. 
+The sample dropdown applies to the Deep Dive tab only. If set to 'Dept', the statistics on those subtabs (and the count in the sidebar) will only reflect the department chosen below. If set to 'All' then it will reflect all of the top 9 Departments. This dropdown does not affect the Overview tab, which always splits by department regardless of the setting. 
 
 You can set the minimum count for inclusion in the two bigram tabs, under Deep Dive. The higher the number, the more strict the filter and thus the more sparse the graph/table. 
 
@@ -28,7 +28,7 @@ You can also add your own stop words to the list in real time, although it won't
 
 ## Main Tabs
 
-### Overhead
+### Overview
 
 1. Most Important Terms
 
