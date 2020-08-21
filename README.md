@@ -7,7 +7,7 @@
 install.packages(c("shiny","shinydashboard","tidyverse","magrittr",
                    "rlang","flexdashboard","DT","shinycssloaders",
                    "tidytext","igraph","ggraph","widyr","tm","wordcloud",
-                   "topicmodels","scales","ggthemes","gghighlight"))
+                   "topicmodels","scales","ggthemes","gghighlight","textmineR","ggwordcloud"))
                    
 library(shiny)
 runGitHub("open-data/TBS-ATI-NLP_Exploration/")
@@ -16,7 +16,9 @@ runGitHub("open-data/TBS-ATI-NLP_Exploration/")
 
 ## Sidebar
 
-The sample dropdown applies to the Deep Dive tab only. If set to 'Dept', the statistics on those subtabs (and the count in the sidebar) will only reflect the department chosen below. If set to 'All' then it will reflect all of the top 9 Departments. This dropdown does not affect the Overhead tab, which always splits by department regardless of the setting. 
+The sample dropdown applies to the Deep Dive tab only. If set to 'Dept', the statistics on those subtabs (and the count in the sidebar) will only reflect the department chosen below. If set to 'All' then it will reflect all of the top 9 Departments. This dropdown does not affect the Overview tab, which always splits by department regardless of the setting. 
+
+![sidebar screenshot](https://github.com/PatLittle/TBS-ATI-NLP_Exploration/blob/master/screen_shots/ATI-NLP-01.PNG)
 
 You can set the minimum count for inclusion in the two bigram tabs, under Deep Dive. The higher the number, the more strict the filter and thus the more sparse the graph/table. 
 
@@ -28,7 +30,7 @@ You can also add your own stop words to the list in real time, although it won't
 
 ## Main Tabs
 
-### Overhead
+### Overview
 
 1. Most Important Terms
 
@@ -44,6 +46,8 @@ You can also control how many N-grams you want to see in the graphic. Note that 
 
 Click the button to download a plot of the graphs. You should be prompted to save it to your Downloads folder.
 
+![tf-idf screenshot](https://github.com/PatLittle/TBS-ATI-NLP_Exploration/blob/master/screen_shots/ATI-NLP-02.PNG)
+
 2. Topics 
 
 This tab does some topic modeling using LDA. The main themes are listed in the title of each facet, which shows a wordcloud of words contributing most to the themes. 
@@ -51,6 +55,8 @@ This tab does some topic modeling using LDA. The main themes are listed in the t
 You can set the number of topics in the dropdown, although sometimes the algorithm will fit fewer topics. 
 
 Click the button to download a plot of the graphs. You should be prompted to save it to your Downloads folder.
+
+![topics screenshot](https://github.com/PatLittle/TBS-ATI-NLP_Exploration/blob/master/screen_shots/ATI-NLP-03.PNG)
 
 ### Deep Dive
 
