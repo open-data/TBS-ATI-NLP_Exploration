@@ -46,6 +46,8 @@ You can also control how many N-grams you want to see in the graphic. Note that 
 
 Click the button to download a plot of the graphs. You should be prompted to save it to your Downloads folder.
 
+![tf-idf screenshot](https://github.com/PatLittle/TBS-ATI-NLP_Exploration/blob/master/screen_shots/ATI-NLP-02.PNG)
+
 2. Topics 
 
 This tab does some topic modeling using LDA. The main themes are listed in the title of each facet, which shows a wordcloud of words contributing most to the themes. 
@@ -53,6 +55,8 @@ This tab does some topic modeling using LDA. The main themes are listed in the t
 You can set the number of topics in the dropdown, although sometimes the algorithm will fit fewer topics. 
 
 Click the button to download a plot of the graphs. You should be prompted to save it to your Downloads folder.
+
+![topics screenshot](https://github.com/PatLittle/TBS-ATI-NLP_Exploration/blob/master/screen_shots/ATI-NLP-03.PNG)
 
 ### Deep Dive
 
