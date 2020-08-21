@@ -18,7 +18,7 @@ runGitHub("open-data/TBS-ATI-NLP_Exploration/")
 
 The sample dropdown applies to the Deep Dive tab only. If set to 'Dept', the statistics on those subtabs (and the count in the sidebar) will only reflect the department chosen below. If set to 'All' then it will reflect all of the top 9 Departments. This dropdown does not affect the Overview tab, which always splits by department regardless of the setting. 
 
-![sidebar screenshot](screen_shots/ATI-NLP-01.png)
+![sidebar screenshot](https://github.com/PatLittle/TBS-ATI-NLP_Exploration/blob/master/screen_shots/ATI-NLP-01.PNG)
 
 You can set the minimum count for inclusion in the two bigram tabs, under Deep Dive. The higher the number, the more strict the filter and thus the more sparse the graph/table. 
 
