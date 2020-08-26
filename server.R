@@ -38,7 +38,8 @@ server <- function(input, output, session){
   nTotal = reactive(  nrow(filterData())   ) # Printed text
   
   
-  ## Update custom stop word list
+  ### Update custom stop word list
+  ## With added words
   observeEvent(c(input$goStop, input$removeDeptName), {
     uiWords = strsplit(input$stopWordInput, ",") %>% 
       unlist() %>% 
@@ -54,6 +55,27 @@ server <- function(input, output, session){
     
     rv$stops = data.frame(word = addWords, lexicon = "CUSTOM") %>%
       bind_rows(stop_words)
+  })
+  
+  ## Removing all customs
+  observeEvent(input$ignoreAllStops, {
+    uiWords = strsplit(input$stopWordInput, ",") %>% 
+      unlist() %>% 
+      trimws()
+    
+    addWords = c(custWords, uiWords)
+    
+    if(input$removeDeptName){
+      deptWords = strsplit(input$dept, " ") %>% unlist() %>% tolower()
+      addWords = c(addWords, deptWords)
+    }
+    
+    if(input$ignoreAllStops)  rv$stops = stop_words  
+    if(!input$ignoreAllStops){
+      rv$stops = data.frame(word = addWords, lexicon = "CUSTOM") %>%
+        bind_rows(stop_words)
+    } 
+    
   })
   
   ## Make N-grams
