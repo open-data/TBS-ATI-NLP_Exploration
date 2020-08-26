@@ -59,6 +59,7 @@ sidebar = dashboardSidebar(
               
               , h3("Stop Word Management")
               , fluidRow(column(12, checkboxInput("removeDeptName", "Remove department name?", FALSE)))
+              , fluidRow(column(12,div(style = "margin-top:-2em", checkboxInput("ignoreAllStops", "Ignore all custom stop words?", FALSE))))
               , fluidRow(column(12, textInput("stopWordInput", "Add custom stop words (CSV):")))
               , fluidRow(column(12, actionButton("goStop", "Enhance!", icon = icon("laptop"))))
               
