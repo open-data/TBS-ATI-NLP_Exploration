@@ -54,7 +54,7 @@ sidebar = dashboardSidebar(
                 ,column(6, h3("N = ", textOutput("dataNtotal", inline= T)))
               )
               
-              , fluidRow(column(12, selectInput("dept", "Department", ownersTop9)))
+              , fluidRow(column(12, selectInput("dept", "Department", ownersTopN)))
               , fluidRow(column(8, numericInput("bigramN", "Top N for Bigrams", 20, 5, 50, 5)))
               
               , h3("Stop Word Management")
