@@ -12,7 +12,7 @@ server <- function(input, output, session){
   rv$stops = data.frame(word = custWords, lexicon = "CUSTOM") %>% bind_rows(stop_words)
   
   # Figure out which variables are dates, factors, numeric, and binary
-  varClasses = reactive({    sapply(sapply(ati_top9, class), "[[", 1)    })
+  varClasses = reactive({    sapply(sapply(ati_topN, class), "[[", 1)    })
   
   dateList   = reactive({    names(varClasses())[varClasses() %in% c("Date", "POSIXct")]    })
   factorList = reactive({    names(varClasses())[varClasses() %in% c("factor", "character")]    })
@@ -23,7 +23,7 @@ server <- function(input, output, session){
   filterData = reactive({
     req(input$filterDataSample)
     
-    ati_top9 %>%
+    ati_topN %>%
       {if(input$filterDataSample != "All") filter(., owner == input$dept) else .}
   })
   
@@ -80,15 +80,15 @@ server <- function(input, output, session){
   
   ## Make N-grams
   unigram = reactive({
-    ati_top9 %>%
+    ati_topN %>%
       count_unigrams(rv$stops) %>%
       group_by(owner) %>% 
       count(word)
   })
   
-  bigram  = reactive({    ati_top9 %>% count_bigrams(rv$stops)  })
-  trigram = reactive({    ati_top9 %>% count_trigrams(rv$stops)  })
-  tetragram = reactive({    ati_top9 %>% count_tetragrams(rv$stops)  })
+  bigram  = reactive({    ati_topN %>% count_bigrams(rv$stops)  })
+  trigram = reactive({    ati_topN %>% count_trigrams(rv$stops)  })
+  tetragram = reactive({    ati_topN %>% count_tetragrams(rv$stops)  })
   
   word_cors = reactive({
     req(input$dept, input$bigramN)
@@ -98,7 +98,7 @@ server <- function(input, output, session){
       filter(n >= input$bigramN) %>% 
       pull(word)
     
-    ati_top9 %>% 
+    ati_topN %>% 
       filter(owner == input$dept) %>%
       count_unigrams(rv$stops) %>%
       filter(word %in% topWords) %>%
@@ -108,7 +108,7 @@ server <- function(input, output, session){
   dtm = reactive({
     req(input$dept)
     
-    ati_sub_topics = ati_top9 %>% filter(owner == input$dept)
+    ati_sub_topics = ati_topN %>% filter(owner == input$dept)
     
     # ati_sub_topics %>%
     #   count_unigrams(rv$stops) %>%
@@ -134,23 +134,23 @@ server <- function(input, output, session){
   
   ## Sidebar
   ## Uni tab
-  output$selectFac <- renderUI(  selectInput("facVar", "Factor Variable:",   choices = intersect(factorList(), names(ati_top9)))  )
-  output$selectNum <- renderUI(  selectInput("numVar", "Numeric Variable:",  choices = intersect(c(numberList(), dateList()), names(ati_top9)))  )
-  output$selectDat <- renderUI(  selectInput("datVar", "DateTime Variable:", choices = intersect(dateList(), names(ati_top9)))  )
-  output$selectBin <- renderUI(  selectInput("binVar", "Binary Variable:",   choices = intersect(binaryList(), names(ati_top9)))  )
+  output$selectFac <- renderUI(  selectInput("facVar", "Factor Variable:",   choices = intersect(factorList(), names(ati_topN)))  )
+  output$selectNum <- renderUI(  selectInput("numVar", "Numeric Variable:",  choices = intersect(c(numberList(), dateList()), names(ati_topN)))  )
+  output$selectDat <- renderUI(  selectInput("datVar", "DateTime Variable:", choices = intersect(dateList(), names(ati_topN)))  )
+  output$selectBin <- renderUI(  selectInput("binVar", "Binary Variable:",   choices = intersect(binaryList(), names(ati_topN)))  )
   
   ## Bi tab
-  output$selectMultivarX <- renderUI(    selectInput("multivarX", "X Variable:",  choices = names(ati_top9))   )
-  output$selectMultivarY <- renderUI(    selectInput("multivarY", "Y Variable:",  choices = intersect(c(factorList(), numberList()), names(ati_top9)))  )
-  output$selectMultivarG <- renderUI(    selectInput("multivarG", "Grouping Variable (Boxplot & Scatter):",   choices = c("NONE", intersect(c(factorList(), binaryList()), names(ati_top9))))  )
+  output$selectMultivarX <- renderUI(    selectInput("multivarX", "X Variable:",  choices = names(ati_topN))   )
+  output$selectMultivarY <- renderUI(    selectInput("multivarY", "Y Variable:",  choices = intersect(c(factorList(), numberList()), names(ati_topN)))  )
+  output$selectMultivarG <- renderUI(    selectInput("multivarG", "Grouping Variable (Boxplot & Scatter):",   choices = c("NONE", intersect(c(factorList(), binaryList()), names(ati_topN))))  )
   
   observeEvent(input$switchVarsBi, {
     tempX = input$multivarX
     tempY = input$multivarY
     
-    output$selectMultivarX <- renderUI(    selectInput("multivarX", "X Variable:",  choices = names(ati_top9), selected = tempY)   )
+    output$selectMultivarX <- renderUI(    selectInput("multivarX", "X Variable:",  choices = names(ati_topN), selected = tempY)   )
     output$selectMultivarY <- renderUI({
-      selectInput("multivarY", "Y Variable:",  choices = intersect(c(factorList(), numberList()), names(ati_top9)), selected = tempX)
+      selectInput("multivarY", "Y Variable:",  choices = intersect(c(factorList(), numberList()), names(ati_topN)), selected = tempX)
     })
   })
   
@@ -258,7 +258,7 @@ server <- function(input, output, session){
   
   ## Uni tab
   output$plotBar  = renderPlot({
-    req(input$facVar %in% names(ati_top9))
+    req(input$facVar %in% names(ati_topN))
     
     filterData() %>% select(input$facVar) %>%
       gg_count(type= "Bar", x.lab = input$facVar, maxLevels = input$maxBarsUni, maxLabelL = input$maxLabelUni, 
@@ -266,7 +266,7 @@ server <- function(input, output, session){
   }, bg= "transparent")
   
   output$plotHist = renderPlot({
-    req(input$numVar %in% names(ati_top9))
+    req(input$numVar %in% names(ati_topN))
     
     filterData() %>% select(input$numVar) %>%
       gg_hist(x.lab = input$numVar, myBins = input$numBinsHistUni, iLog = input$iLogHistUni)
@@ -335,8 +335,8 @@ server <- function(input, output, session){
   ### ------ ###
   
   ## Univariate tab
-  output$gaugeFac = renderGauge({   req(input$facVar %in% names(ati_top9)); render_gauge(input$facVar, filterData())   })
-  output$gaugeNum = renderGauge({   req(input$numVar %in% names(ati_top9)); render_gauge(input$numVar, filterData())   })
+  output$gaugeFac = renderGauge({   req(input$facVar %in% names(ati_topN)); render_gauge(input$facVar, filterData())   })
+  output$gaugeNum = renderGauge({   req(input$numVar %in% names(ati_topN)); render_gauge(input$numVar, filterData())   })
   
   ## Bivariate tab
   output$gaugeBiComp = renderGauge({
