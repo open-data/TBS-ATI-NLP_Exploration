@@ -139,10 +139,17 @@ visualize_tfidf <- function(tfidf, topN = 10) {
 
 
 ## Variables
-ati = read_csv("ati.csv") %>% clean_ati() %>% mutate(owner = shorten_department_names(owner))
+atiOrig = read_csv("ati.csv") %>% clean_ati() 
+ati = atiOrig %>% mutate(owner = shorten_department_names(owner))
 ownersTopN = ati %>% group_by(owner) %>% count() %>% ungroup() %>% top_n(topNowners, n) %>% pull(owner)
 ati_topN = ati %>% filter(owner %in% ownersTopN)
+
+# Stop words
 custWords = read_csv("stop_words_custom.csv") %>% pull(word)
+deptWordsFull = atiOrig %>% group_by(owner) %>% count() %>% ungroup() %>% top_n(topNowners, n) %>% pull(owner) 
+deptWordsAbbr = ati %>% group_by(owner) %>% count() %>% ungroup() %>% top_n(topNowners, n) %>% pull(owner) 
+deptWords = c(deptWordsFull, deptWordsAbbr) %>% strsplit(" ") %>% unlist() %>% tolower()
+
 
 ### GENERAL ###
 
