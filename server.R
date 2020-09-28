@@ -40,7 +40,7 @@ server <- function(input, output, session){
   
   ### Update custom stop word list
   ## With added words
-  observeEvent(c(input$goStop, input$removeDeptName), {
+  observeEvent(c(input$goStop, input$removeDeptName, input$tabs), {
     uiWords = strsplit(input$stopWordInput, ",") %>% 
       unlist() %>% 
       trimws()
@@ -48,10 +48,7 @@ server <- function(input, output, session){
     addWords = c(custWords, uiWords)
     
     # Remove department name as well, if selected
-    if(input$removeDeptName){
-      deptWords = strsplit(input$dept, " ") %>% unlist() %>% tolower()
-      addWords = c(addWords, deptWords)
-    } 
+    if(input$removeDeptName) addWords = c(addWords, deptWords) 
     
     rv$stops = data.frame(word = addWords, lexicon = "CUSTOM") %>%
       bind_rows(stop_words)
