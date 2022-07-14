@@ -38,21 +38,20 @@ clean_ati <- function(dfr) {
       ,owner = sub("(and)|(And)", "&", owner)
       ,owner = trimws(owner)
     ) %>%
-    filter(year != "2020" | month != "Oct") %>%
     select(-summary_fr)
 }
 
 shorten_department_names <- function(depNames) {
-  depNames[grepl("Immigration, Ref", depNames)] = "IR & C"
-  depNames[grepl("Innovation, Sci", depNames)] = "IS & ED"
-  depNames[grepl("Public Services", depNames)] = "PS & P"
-  depNames[grepl("Employment & Social", depNames)] = "E & SD"
+  depNames[grepl("Immigration, Ref", depNames)] = "IRCC"
+  depNames[grepl("Innovation, Sci", depNames)] = "ISED"
+  depNames[grepl("Public Services", depNames)] = "PSPC"
+  depNames[grepl("Employment & Social", depNames)] = "ESDC"
   depNames[grepl("Privy Council", depNames)] = "PCO"
   depNames[grepl("Border Services", depNames)] = "CBSA"
   depNames[grepl("Revenue Agency", depNames)] = "CRA"
   depNames[grepl("Mounted Police", depNames)] = "RCMP"
   depNames[grepl("Treasury Board", depNames)] = "TBS"
-  depNames[grepl("Climate Change", depNames)] = "Env. & CC"
+  depNames[grepl("Climate Change", depNames)] = "ECCC"
   depNames[grepl("Food Inspection", depNames)] = "CFIA"
   depNames[grepl("Nuclear Safety", depNames)] = "CNSC"
   
